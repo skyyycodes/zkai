@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  release:
+    types: [created]
+
+permissions:
+  contents: write   # needed to create GitHub releases and upload assets
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pip
+        run: python -m ensurepip --upgrade
+
+      - name: Build zipapp
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          bash scripts/build-release.sh "$VERSION"
+
+      - name: Bundle compiled contract artifacts
+        run: |
+          tar -czf dist/compiled.tar.gz -C deploy compiled
+          echo "compiled.tar.gz size: $(du -sh dist/compiled.tar.gz | cut -f1)"
+
+      - name: Upload release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          if gh release view "$GITHUB_REF_NAME" &>/dev/null; then
+            gh release upload "$GITHUB_REF_NAME" \
+              "dist/zkai-${VERSION}.pyz" \
+              "dist/zkai.pyz" \
+              "dist/compiled.tar.gz" \
+              --clobber
+          else
+            cat > /tmp/release-notes.md << NOTES
+          ## Install
+
+          \`\`\`bash
+          curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
+          \`\`\`
+
+          Or download \`zkai-${VERSION}.pyz\` directly from this release and run:
+          \`\`\`bash
+          python3 zkai-${VERSION}.pyz --help
+          \`\`\`
+
+          ## Requirements
+          - Python 3.9+
+          - Docker + Docker Compose
+          NOTES
+            gh release create "$GITHUB_REF_NAME" \
+              --title "ZKai CLI v${VERSION}" \
+              --notes-file /tmp/release-notes.md \
+              "dist/zkai-${VERSION}.pyz" \
+              "dist/zkai.pyz" \
+              "dist/compiled.tar.gz"
+          fi

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "15925504c5e747a27b2af067fc36e0666cf1ffbe185f88ad254d242ab24e4214",
+    "endpoint": "https://blah-combined-forecast-collectors.trycloudflare.com",
+    "model": "qwen2.5-1.5b",
+    "price": 100,
+    "reputation": 0.5,
+    "active": true,
+    "registered_at": "2026-04-03T09:00:00.000Z"
+  },
+  {
+    "id": "776a7a1f15f4b8895dba010f019d61bb3afb8544eee05003af52b0a05ec9ffbb",
+    "endpoint": "https://blah-combined-forecast-collectors.trycloudflare.com",
+    "model": "qwen2.5-1.5b",
+    "price": 100,
+    "reputation": 0.5,
+    "active": false,
+    "registered_at": "2026-04-03T15:12:36.728Z"
+  },
+  {
+    "id": "b0930a6088543e600b2cb33a289be3c4d2b8f63e14ed575a028f87e12718f614",
+    "endpoint": "https://blah-combined-forecast-collectors.trycloudflare.com",
+    "model": "qwen2.5-1.5b",
+    "price": 100,
+    "reputation": 0.5,
+    "active": false,
+    "registered_at": "2026-04-04T01:28:11.555Z"
+  },
+  {
+    "id": "e091f2bbee46ae0729fd0052fe624ab7beb8086f359496a7de5b2b5917ea7f74",
+    "endpoint": "https://money-high-dodge-opposite.trycloudflare.com",
+    "model": "qwen2.5:1.5b",
+    "price": 1000,
+    "reputation": 0.5,
+    "active": false,
+    "registered_at": "2026-04-04T01:52:35.934Z"
+  },
+  {
+    "id": "6dacaacae7eb115bedec72658ca29f219a3d32c810d4742eaa45d44725676dae",
+    "endpoint": "https://money-high-dodge-opposite.trycloudflare.com",
+    "model": "qwen2.5:1.5b",
+    "price": 100,
+    "reputation": 0.5,
+    "active": true,
+    "registered_at": "2026-04-04T01:58:30.955Z"
+  },
+  {
+    "id": "ec30e0c8f642582212cf9e618380dd931f334ba97f53702a865fa1547a0942f2",
+    "endpoint": "https://zkai-relay.fly.dev/relay/ec30e0c8f642582212cf9e618380dd931f334ba97f53702a865fa1547a0942f2",
+    "model": "qwen2.5:1.5b",
+    "price": 100,
+    "reputation": 0.5,
+    "active": true,
+    "registered_at": "2026-04-04T04:27:30.688Z"
+  },
+  {
+    "id": "bce72e99dafc0adaa747b721aa42b0759f755cf379ffd183136722c7d98b9da2",
+    "endpoint": "https://zkai-relay.fly.dev/relay/bce72e99dafc0adaa747b721aa42b0759f755cf379ffd183136722c7d98b9da2",
+    "model": "qwen2.5:1.5b",
+    "price": 100,
+    "reputation": 0.5,
+    "active": false,
+    "registered_at": "2026-04-04T06:41:06.396Z"
+  },
+  {
+    "id": "f1e008accd46b190f018ce890a7646ca453294ab12718f419bd7a81f2ef759a5",
+    "endpoint": "https://zkai-relay.fly.dev/relay/f1e008accd46b190f018ce890a7646ca453294ab12718f419bd7a81f2ef759a5",
+    "model": "qwen2.5:1.5b",
+    "price": 100,
+    "reputation": 0.5,
+    "active": true,
+    "registered_at": "2026-04-09T01:58:30.145Z"
+  },
+  {
+    "id": "f9eaec2547b3bc7b1e2aec52275582d49ee1d05b05831e67c55882925e47e001",
+    "endpoint": "https://zkai-relay.fly.dev/relay/f9eaec2547b3bc7b1e2aec52275582d49ee1d05b05831e67c55882925e47e001",
+    "model": "qwen2.5:1.5b",
+    "price": 100,
+    "reputation": 0.5,
+    "active": false,
+    "registered_at": "2026-04-09T01:59:18.823Z"
+  },
+  {
+    "id": "0x0Aee1782f4821044df84101Fd7c11c354C00f292",
+    "endpoint": "https://zkai-relay.fly.dev/relay/0x0Aee1782f4821044df84101Fd7c11c354C00f292",
+    "model": "qwen2.5-1.5b",
+    "price": 100,
+    "reputation": 0.5,
+    "active": true,
+    "registered_at": "2026-04-18T06:07:30.168Z"
+  }
+]

@@ -1,0 +1,60 @@
+services:
+  bridge:
+    image: node:22-alpine
+    container_name: zkai-bridge
+    working_dir: /app
+    volumes:
+      - ../bridge:/app
+      - ../deploy/deployment.json:/app/deployment.json:ro
+      - ../deploy/abis:/app/abis:ro
+      - bridge_data:/app/data
+    environment:
+      - BRIDGE_PORT=7300
+      - ZKAI_PRIVATE_KEY=${ZKAI_PRIVATE_KEY}
+      - OG_RPC_URL=${OG_RPC_URL:-https://evmrpc-testnet.0g.ai}
+      - ZKAI_AUTH_URL=${ZKAI_AUTH_URL:-https://zkai.vercel.app}
+      - REGISTRY_CONTRACT=${REGISTRY_CONTRACT:-}
+      - ESCROW_CONTRACT=${ESCROW_CONTRACT:-}
+      - ATTESTATION_CONTRACT=${ATTESTATION_CONTRACT:-}
+    ports:
+      - "7300:7300"
+    command: >
+      sh -c "
+        npm install --silent &&
+        npx tsx src/server.ts
+      "
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:7300/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  enclave:
+    build: .
+    container_name: zkai-enclave
+    ports:
+      - "8080:8080"
+    volumes:
+      - ollama_models:/root/.ollama
+      - ./.provider_id:/app/.provider_id:ro
+    environment:
+      - OLLAMA_MODEL=qwen2.5:1.5b
+      - GRAMINE_MODE=direct
+      - MAX_TOKENS=512
+      - HOST=0.0.0.0
+      - PORT=8080
+      - ZKAI_BRIDGE_URL=http://bridge:7300
+      - ZKAI_AUTH_URL=${ZKAI_AUTH_URL:-https://zkai.vercel.app}
+      - ZKAI_PRICE_PER_REQUEST=${ZKAI_PRICE_PER_REQUEST:-100}
+      - ZKAI_RELAY_URL=${ZKAI_RELAY_URL:-}
+      - ZKAI_RELAY_SECRET=${ZKAI_RELAY_SECRET:-}
+    depends_on:
+      bridge:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ollama_models:
+  bridge_data:

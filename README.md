@@ -5,7 +5,7 @@
 [![PyPI - SDK](https://img.shields.io/pypi/v/zkai?label=zkai%20SDK&color=cyan)](https://pypi.org/project/zkai/)
 [![PyPI - CLI](https://img.shields.io/pypi/v/zkai-cli?label=zkai-cli&color=cyan)](https://pypi.org/project/zkai-cli/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/Live-zkai--ether--og.vercel.app-black?logo=vercel)](https://zkai.iameshan.tech)
+[![Live Demo](https://img.shields.io/badge/Live-zkai.iameshan.tech-black?logo=vercel)](https://zkai.iameshan.tech)
 [![0G Mainnet](https://img.shields.io/badge/Deployed-0G%20Mainnet-cyan)](https://chainscan.0g.ai)
 
 ZKai is a decentralized AI inference marketplace where every response is cryptographically verified. Consumers send OpenAI-compatible requests through a hosted gateway; providers run inference inside Intel TDX-sealed enclaves. Every prompt is encrypted client-side with the enclave's TDX-attested public key — the gateway never sees plaintext. Every completed inference produces a SHA-256 attestation hash anchored on **0G Mainnet**. The result: private inference, verifiable billing, native A0GI payments, and a familiar developer API.

@@ -29,12 +29,16 @@ def load_provider_id() -> str:
         sys.exit(1)
 
 
-def forward_to_enclave(path: str, headers: dict, body: dict) -> tuple[int, dict]:
-    """HTTP POST to local enclave, returns (status_code, response_body)."""
+def forward_to_enclave(path: str, headers: dict, body: dict, method: str = "POST") -> tuple[int, dict]:
+    """HTTP request to local enclave, returns (status_code, response_body)."""
     url = f"{ENCLAVE_URL}{path}"
-    payload = json.dumps(body).encode()
-    req = urllib.request.Request(url, data=payload, method="POST")
-    req.add_header("Content-Type", "application/json")
+    method = method.upper()
+    if method == "GET":
+        req = urllib.request.Request(url, method="GET")
+    else:
+        payload = json.dumps(body or {}).encode()
+        req = urllib.request.Request(url, data=payload, method=method)
+        req.add_header("Content-Type", "application/json")
     for k, v in headers.items():
         if k.lower() not in ("content-length", "transfer-encoding", "host"):
             req.add_header(k, v)
@@ -63,10 +67,11 @@ async def handle_message(ws, msg: dict):
     headers = msg.get("headers", {})
     body = msg.get("body", {})
     path = msg.get("path", "/v1/chat/completions")
+    method = msg.get("method", "POST")
 
-    print(f"[relay] → request {correlation_id[:8]}...", flush=True)
+    print(f"[relay] → request {correlation_id[:8]}... {method} {path}", flush=True)
     status, response_body = await asyncio.get_event_loop().run_in_executor(
-        None, forward_to_enclave, path, headers, body
+        None, forward_to_enclave, path, headers, body, method
     )
     print(f"[relay] ← response {correlation_id[:8]}... status={status}", flush=True)
 

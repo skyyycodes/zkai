@@ -5,7 +5,7 @@
 [![PyPI - SDK](https://img.shields.io/pypi/v/zkai?label=zkai%20SDK&color=cyan)](https://pypi.org/project/zkai/)
 [![PyPI - CLI](https://img.shields.io/pypi/v/zkai-cli?label=zkai-cli&color=cyan)](https://pypi.org/project/zkai-cli/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/Live-zkai--ether--og.vercel.app-black?logo=vercel)](https://zkai-ether-og.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live-zkai--ether--og.vercel.app-black?logo=vercel)](https://zkai.iameshan.tech)
 [![0G Mainnet](https://img.shields.io/badge/Deployed-0G%20Mainnet-cyan)](https://chainscan.0g.ai)
 
 ZKai is a decentralized AI inference marketplace where every response is cryptographically verified. Consumers send OpenAI-compatible requests through a hosted gateway; providers run inference inside Intel TDX-sealed enclaves. Every prompt is encrypted client-side with the enclave's TDX-attested public key — the gateway never sees plaintext. Every completed inference produces a SHA-256 attestation hash anchored on **0G Mainnet**. The result: private inference, verifiable billing, native A0GI payments, and a familiar developer API.
@@ -60,9 +60,9 @@ ZKai replaces that trust with proof:
 
 | | |
 |---|---|
-| **Frontend / Gateway** | https://zkai-ether-og.vercel.app |
-| **Dashboard** | https://zkai-ether-og.vercel.app/dashboard |
-| **Pitch Deck** | https://zkai-ether-og.vercel.app/deck |
+| **Frontend / Gateway** | https://zkai.iameshan.tech |
+| **Dashboard** | https://zkai.iameshan.tech/dashboard |
+| **Pitch Deck** | https://zkai.iameshan.tech/deck |
 | **WebSocket Relay** | https://zkai-relay.fly.dev |
 | **Block Explorer** | https://chainscan.0g.ai |
 | **Faucet (testnet)** | https://faucet.0g.ai |
@@ -84,7 +84,7 @@ pip install zkai
 ```python
 from zkai import ZKai
 
-client = ZKai(api_key="zkai-...")  # get one at https://zkai-ether-og.vercel.app/dashboard
+client = ZKai(api_key="zkai-...")  # get one at https://zkai.iameshan.tech/dashboard
 
 response = client.chat.completions.create(
     model="qwen2.5:1.5b",
@@ -110,7 +110,7 @@ The gateway never sees plaintext.
 
 Before you can run inferences, deposit some A0GI to the [PaymentEscrow contract](https://chainscan.0g.ai/address/0xb2C7c0F7a4C2877319E8Ed1Fae0bf3C705b6Fc4C):
 
-1. Visit [the dashboard](https://zkai-ether-og.vercel.app/dashboard)
+1. Visit [the dashboard](https://zkai.iameshan.tech/dashboard)
 2. Connect MetaMask (it auto-switches you to 0G Mainnet)
 3. Go to **Credits** → enter an amount → click **Deposit AOGI**
 
@@ -178,7 +178,7 @@ zkai status        # shows your provider dashboard URL
 zkai logs bridge   # tail the bridge for incoming attestations
 ```
 
-Open `https://zkai-ether-og.vercel.app/provider_dashboard?id=0xYOUR_ADDR` to see your earnings.
+Open `https://zkai.iameshan.tech/provider_dashboard?id=0xYOUR_ADDR` to see your earnings.
 
 ### Day-to-day operations
 
@@ -514,7 +514,7 @@ OG_RPC_URL=https://evmrpc.0g.ai
 DATABASE_URL=postgresql://...           # Neon Postgres URL
 ZKAI_RELAY_URL=https://zkai-relay.fly.dev
 ZKAI_RELAY_SECRET=<shared-secret>
-ZKAI_AUTH_URL=https://zkai-ether-og.vercel.app
+ZKAI_AUTH_URL=https://zkai.iameshan.tech
 ```
 
 ### Deploy to Vercel
@@ -537,7 +537,7 @@ from zkai import ZKai
 
 client = ZKai(
     api_key="zkai-...",                              # required for hosted gateway
-    base_url="https://zkai-ether-og.vercel.app",     # default
+    base_url="https://zkai.iameshan.tech",     # default
     encrypted=True,                                    # default; False uses legacy plaintext path
     provider_endpoint=None,                            # set to bypass gateway and hit a specific provider
     skip_attestation=False,                            # dev only — never disable in prod
@@ -756,8 +756,8 @@ python -c "from zkai import ZKai; print('OK')"
 
 ## Links
 
-- **Live demo** — https://zkai-ether-og.vercel.app
-- **Pitch deck** — https://zkai-ether-og.vercel.app/deck
+- **Live demo** — https://zkai.iameshan.tech
+- **Pitch deck** — https://zkai.iameshan.tech/deck
 - **SDK on PyPI** — https://pypi.org/project/zkai/
 - **CLI on PyPI** — https://pypi.org/project/zkai-cli/
 - **GitHub** — https://github.com/skyyycodes/zkai

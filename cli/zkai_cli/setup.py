@@ -17,7 +17,7 @@ from zkai_cli.util import (
     deploy_dir, compose_dir, env_file, ensure_repo,
 )
 
-GATEWAY_URL = "https://zkai.vercel.app"
+GATEWAY_URL = "https://zkai-ether-og.vercel.app"
 
 
 # ── init wizard ───────────────────────────────────────────────────────────────

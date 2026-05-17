@@ -4,14 +4,43 @@ build-backend = "hatchling.build"
 
 [project]
 name = "zkai-cli"
-version = "0.4.0"
-description = "ZKai provider CLI — setup, register, and manage your ZKai node"
+version = "0.5.1"
+description = "ZKai provider CLI — setup, register, and manage your verifiable AI inference node on 0G chain"
+readme = "README.md"
 requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "ZKai", email = "team@zkai.network" },
+]
+keywords = [
+    "ai", "inference", "provider", "node", "cli",
+    "blockchain", "0g", "tee", "tdx", "verifiable",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "typer>=0.12",
     "rich>=13",
     "requests>=2.31",
 ]
+
+[project.urls]
+Homepage = "https://zkai-ether-og.vercel.app"
+Repository = "https://github.com/skyyycodes/zkai-eth"
+Issues = "https://github.com/skyyycodes/zkai-eth/issues"
 
 [project.scripts]
 zkai = "zkai_cli.main:app"

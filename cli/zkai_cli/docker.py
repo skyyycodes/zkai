@@ -165,7 +165,7 @@ def _print_dashboard_link(repo: Path):
         data = _json.loads(pid_file.read_text())
         provider_id = data.get("provider_id", "")
         if provider_id:
-            url = f"https://zkai.vercel.app/provider_dashboard?id={provider_id}"
+            url = f"https://zkai-ether-og.vercel.app/provider_dashboard?id={provider_id}"
             console.print(f"\n[bold]Provider Dashboard:[/bold] [link={url}][violet]{url}[/violet][/link]")
     except Exception:
         pass

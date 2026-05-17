@@ -4,9 +4,30 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zkai"
-version = "0.4.0"
-description = "Private AI inference on Midnight chain — drop-in OpenAI replacement"
+version = "0.5.0"
+description = "Private, verifiable AI inference on 0G chain — drop-in OpenAI-compatible SDK"
+readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "ZKai", email = "team@zkai.network" },
+]
+keywords = [
+    "ai", "inference", "openai", "llm", "tee", "tdx", "attestation",
+    "blockchain", "0g", "verifiable", "privacy", "encryption",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Security :: Cryptography",
+]
 dependencies = [
     "cryptography>=43.0",
     "requests>=2.32",
@@ -18,8 +39,12 @@ langchain = [
     "langchain-core>=0.3",
 ]
 
-[project.scripts]
-zkai-provider = "zkai.provider_cli:main"
+[project.urls]
+Homepage = "https://zkai-ether-og.vercel.app"
+Repository = "https://github.com/skyyycodes/zkai-eth"
+Issues = "https://github.com/skyyycodes/zkai-eth/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["zkai*"]
+exclude = ["zkai.egg-info*"]

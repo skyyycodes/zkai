@@ -1,6 +1,13 @@
 """
-ZKai client — OpenAI-compatible interface.
-Drop-in replacement: change 2 lines, everything else stays the same.
+ZKai client — OpenAI-compatible interface with end-to-end encryption.
+
+Modes:
+  - Encrypted gateway (default): prompt encrypted client-side with the
+    enclave's X25519 pubkey; gateway sees only ciphertext.
+  - Plain gateway: legacy fallback for compatibility.
+  - Direct provider: bypass gateway entirely.
+
+Change 2 lines, everything else stays the same.
 """
 
 import requests
@@ -10,7 +17,7 @@ from . import crypto, provider as provider_mod, attestation as att_mod
 from .attestation import ZKaiAttestationError
 
 # Default gateway — consumers send requests here, gateway picks a provider
-GATEWAY_URL = "https://zkai.vercel.app"
+GATEWAY_URL = "https://zkai-ether-og.vercel.app"
 
 
 # ── OpenAI-compatible response types ────────────────────────────────────────
@@ -35,6 +42,7 @@ class ChatCompletion:
     model: str
     choices: list[Choice]
     usage: dict = field(default_factory=dict)
+    attestation_hash: str | None = None
 
 
 # ── Main client ──────────────────────────────────────────────────────────────
@@ -51,29 +59,106 @@ class ZKai:
         registry_contract: str | None = None,
         attestation_contract: str | None = None,
         skip_attestation: bool = False,
+        # End-to-end encryption via gateway (default ON). Set False to use
+        # the legacy plaintext-to-gateway path.
+        encrypted: bool = True,
     ):
         self._api_key = api_key
-        # base_url points to the ZKai gateway (or a self-hosted one)
         self._base_url = (base_url or GATEWAY_URL).rstrip("/")
-        # provider_endpoint bypasses the gateway entirely (advanced / dev use)
         self._provider_endpoint = provider_endpoint
         self._max_price = max_price
         self._min_reputation = min_reputation
         self._registry_contract = registry_contract
         self._attestation_contract = attestation_contract
         self._skip_attestation = skip_attestation
+        self._encrypted = encrypted
         self.chat = _Chat(self)
 
     def _infer(self, model: str, messages: list[dict]) -> ChatCompletion:
-        # ── Gateway mode (default) ────────────────────────────────────────────
-        if not self._provider_endpoint:
-            return self._infer_via_gateway(model, messages)
+        if self._provider_endpoint:
+            return self._infer_direct(model, messages)
+        if self._encrypted:
+            return self._infer_via_gateway_encrypted(model, messages)
+        return self._infer_via_gateway_plain(model, messages)
 
-        # ── Direct provider mode (advanced) ──────────────────────────────────
-        return self._infer_direct(model, messages)
+    # ── Encrypted gateway path (default) ─────────────────────────────────────
 
-    def _infer_via_gateway(self, model: str, messages: list[dict]) -> ChatCompletion:
-        """Send request to the ZKai gateway (plain OpenAI-compatible call)."""
+    def _infer_via_gateway_encrypted(self, model: str, messages: list[dict]) -> ChatCompletion:
+        """
+        End-to-end encrypted via the ZKai gateway.
+
+        Flow:
+          1. GET  /api/providers/pubkey?model=...  → enclave pubkey + provider_id
+          2. Generate ephemeral X25519 keypair locally
+          3. Encrypt prompt with ECDH(ephemeral_priv, enclave_pub) → ciphertext
+          4. POST /api/v1/encrypted-chat  with { provider_id, client_pubkey, encrypted_prompt }
+          5. Decrypt response with ECDH(ephemeral_priv, enclave_pub)
+
+        Gateway never sees plaintext.
+        """
+        headers = {"Content-Type": "application/json"}
+        if self._api_key:
+            headers["X-API-Key"] = self._api_key
+
+        # 1. Fetch enclave pubkey for this model
+        pk_resp = requests.get(
+            f"{self._base_url}/api/providers/pubkey",
+            params={"model": model},
+            headers=headers,
+            timeout=15,
+        )
+        if pk_resp.status_code == 503:
+            raise ZKaiNoProviderError("No providers available for this model.")
+        pk_resp.raise_for_status()
+        pk_data = pk_resp.json()
+        enclave_pubkey = pk_data["pubkey"]
+        provider_id = pk_data["provider_id"]
+
+        # 2-3. Generate ephemeral keypair + encrypt
+        prompt = _messages_to_prompt(messages)
+        our_priv, our_pub = crypto.generate_keypair()
+        encrypted_prompt = crypto.encrypt(prompt, enclave_pubkey, our_priv)
+
+        # 4. Send encrypted blob via gateway
+        resp = requests.post(
+            f"{self._base_url}/api/v1/encrypted-chat",
+            json={
+                "provider_id": provider_id,
+                "client_pubkey": our_pub,
+                "encrypted_prompt": encrypted_prompt,
+                "model": model,
+            },
+            headers=headers,
+            timeout=120,
+        )
+        if resp.status_code == 401:
+            raise ZKaiAuthError("Invalid or missing API key. Get one at https://zkai-ether-og.vercel.app")
+        if resp.status_code == 503:
+            raise ZKaiNoProviderError("No providers available for this model.")
+        resp.raise_for_status()
+        data = resp.json()
+
+        # 5. Decrypt response locally
+        response_text = crypto.decrypt(data["encrypted_response"], enclave_pubkey, our_priv)
+        token_count = len(response_text.split())
+
+        return ChatCompletion(
+            id=f"zkai-{data['job_id'][:8]}",
+            object="chat.completion",
+            model=model,
+            choices=[Choice(
+                index=0,
+                message=Message(role="assistant", content=response_text),
+                finish_reason="stop",
+            )],
+            usage={"prompt_tokens": len(prompt.split()), "completion_tokens": token_count},
+            attestation_hash=data.get("attestation_hash"),
+        )
+
+    # ── Plain gateway path (legacy) ──────────────────────────────────────────
+
+    def _infer_via_gateway_plain(self, model: str, messages: list[dict]) -> ChatCompletion:
+        """Send plaintext request to the ZKai gateway (legacy)."""
         headers = {"Content-Type": "application/json"}
         if self._api_key:
             headers["X-API-Key"] = self._api_key
@@ -85,13 +170,14 @@ class ZKai:
             timeout=120,
         )
         if resp.status_code == 401:
-            raise ZKaiAuthError("Invalid or missing API key. Get one at https://zkai.dev")
+            raise ZKaiAuthError("Invalid or missing API key.")
         if resp.status_code == 503:
             raise ZKaiNoProviderError("No providers available for this model.")
         resp.raise_for_status()
         data = resp.json()
 
         choice = data["choices"][0]
+        xz = data.get("x_zkai", {})
         return ChatCompletion(
             id=data.get("id", "zkai-gateway"),
             object="chat.completion",
@@ -102,7 +188,10 @@ class ZKai:
                 finish_reason=choice.get("finish_reason", "stop"),
             )],
             usage=data.get("usage", {}),
+            attestation_hash=xz.get("attestation_hash"),
         )
+
+    # ── Direct provider path (advanced) ──────────────────────────────────────
 
     def _infer_direct(self, model: str, messages: list[dict]) -> ChatCompletion:
         """Bypass gateway — encrypt and send directly to a provider enclave."""
@@ -153,6 +242,7 @@ class ZKai:
             model=model,
             choices=[Choice(index=0, message=Message(role="assistant", content=response_text))],
             usage={"prompt_tokens": len(prompt.split()), "completion_tokens": token_count},
+            attestation_hash=data.get("attestation_hash"),
         )
 
 

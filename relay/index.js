@@ -34,7 +34,8 @@ const server = http.createServer((req, res) => {
   }
 
   // POST /relay/:provider_id — gateway sends inference request here
-  const relayMatch = url.pathname.match(/^\/relay\/([a-f0-9]+)$/);
+  // Accepts both legacy lowercase-hex IDs and 0x-prefixed mixed-case EVM addresses
+  const relayMatch = url.pathname.match(/^\/relay\/(0x[a-fA-F0-9]{40}|[a-f0-9]+)$/);
   if (req.method === 'POST' && relayMatch) {
     const providerId = relayMatch[1];
     handleRelayRequest(req, res, providerId);
@@ -96,11 +97,18 @@ function handleRelayRequest(req, res, providerId) {
       },
     });
 
+    // Allow gateway to override path/method via special body fields, otherwise default
+    // to POST /v1/chat/completions for backwards compatibility
+    const overridePath = req.headers['x-relay-path'];
+    const overrideMethod = req.headers['x-relay-method'];
+
     ws.send(JSON.stringify({
       type: 'request',
       correlation_id: correlationId,
       headers: forwardHeaders,
       body: parsed,
+      ...(overridePath ? { path: overridePath } : {}),
+      ...(overrideMethod ? { method: overrideMethod } : {}),
     }));
   });
 }

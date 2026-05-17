@@ -22,7 +22,7 @@ app.get('/health', async () => {
     status: 'ok',
     synced: true,
     address: getProviderAddress(),
-    chain: '0G Galileo',
+    chain: process.env.OG_RPC_URL?.includes('testnet') ? '0G Galileo' : '0G Mainnet',
   };
 });
 

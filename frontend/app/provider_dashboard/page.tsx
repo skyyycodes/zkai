@@ -101,7 +101,7 @@ function NodeStatusCard({ provider }: { provider: ProviderInfo }) {
         </div>
         <div>
           <div className="text-xs text-white/30 mb-1">Price</div>
-          <div className="text-white/70">{provider.price} <span className="text-white/40 text-xs">tNIGHT/req</span></div>
+          <div className="text-white/70">{provider.price} <span className="text-white/40 text-xs">A0GI/req</span></div>
         </div>
         <div>
           <div className="text-xs text-white/30 mb-1">Reputation</div>
@@ -195,7 +195,7 @@ function JobRow({ job }: { job: JobRow }) {
           <span className={`text-xs border px-2.5 py-0.5 rounded-full ${JOB_STATUS_COLOR[job.status]}`}>
             {JOB_STATUS_LABEL[job.status]}
           </span>
-          <span className="text-sm text-green-400/80 tabular-nums">+{job.amount} tNIGHT</span>
+          <span className="text-sm text-green-400/80 tabular-nums">+{job.amount} A0GI</span>
           <ChevronRight className={`w-4 h-4 text-white/20 transition-transform ${open ? 'rotate-90' : ''}`} />
         </div>
       </button>
@@ -209,7 +209,7 @@ function JobRow({ job }: { job: JobRow }) {
             </div>
             <div>
               <div className="text-xs text-white/30 mb-1.5">Earned</div>
-              <div className="text-green-400 font-semibold">{job.amount} tNIGHT</div>
+              <div className="text-green-400 font-semibold">{job.amount} A0GI</div>
             </div>
             <div>
               <div className="text-xs text-white/30 mb-1.5">Status</div>
@@ -391,7 +391,7 @@ function ProviderDashboard() {
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <StatCard
             label="Total Earned"
-            value={loading ? '—' : `${totalEarned} tNIGHT`}
+            value={loading ? '—' : `${totalEarned} A0GI`}
             icon={Zap}
             accent="green"
           />
@@ -410,7 +410,7 @@ function ProviderDashboard() {
           />
           <StatCard
             label="Price"
-            value={loading || !provider ? '—' : `${provider.price} tNIGHT`}
+            value={loading || !provider ? '—' : `${provider.price} A0GI`}
             sub="per request"
             icon={Cpu}
             accent="violet"

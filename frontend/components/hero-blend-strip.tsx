@@ -6,7 +6,7 @@ const STATS = [
   { value: "Lower Cost", label: "compared to traditional AI routers", company: "PAYG ROUTING" },
   { value: "Full Privacy", label: "encrypted prompts from client to enclave", company: "TEE + ZK" },
   { value: "Low Latency", label: "smart provider routing for faster responses", company: "GLOBAL NETWORK" },
-  { value: "Verifiable", label: "attested inference and trusted settlement", company: "MIDNIGHT" },
+  { value: "Verifiable", label: "attested inference and trusted settlement", company: "0G CHAIN" },
 ] as const;
 
 export default function HeroBlendStrip() {

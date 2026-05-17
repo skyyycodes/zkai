@@ -60,7 +60,7 @@ export function CtaSection() {
 
                 <p className="mb-12 max-w-xl text-lg leading-relaxed text-white/58 lg:text-xl">
                   Launch with ZKai using OpenAI-compatible APIs, verifiable attestation, and
-                  usage-based settlement on Midnight.
+                  usage-based settlement on the 0G chain.
                 </p>
 
                 <div className="flex flex-col items-start gap-4 sm:flex-row">

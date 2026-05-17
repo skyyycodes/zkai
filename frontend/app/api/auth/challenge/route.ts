@@ -2,7 +2,7 @@
 // Body: { wallet_address: string }
 // Returns: { nonce: string, message: string }
 //
-// Client signs `message` with their Midnight wallet, then POSTs to /api/auth/verify
+// Client signs `message` with their EVM wallet (MetaMask), then POSTs to /api/auth/verify
 
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';

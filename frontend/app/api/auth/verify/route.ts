@@ -3,10 +3,9 @@
 // Returns: { api_key: string }
 //
 // Verifies the nonce exists + not expired, then issues an API key.
-// Signature verification is intentionally lightweight for now —
-// the wallet address itself is the identity (Midnight doesn't have
-// standard secp256k1 signing exposed in the browser API yet).
-// When Midnight exposes signData properly we'll add full sig verification.
+// Signature verification is intentionally lightweight for now — the
+// wallet address itself is the identity. EIP-191/personal_sign verification
+// can be added later via ethers.verifyMessage(message, signature).
 
 import { NextResponse } from 'next/server';
 import { getSql } from '@/lib/db';

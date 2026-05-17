@@ -26,16 +26,47 @@ export async function callEscrow(
   amount: bigint,
 ): Promise<string> {
   const signer = await provider.getSigner();
-  const contract = new ethers.Contract(CONTRACTS.PaymentEscrow, PAYMENT_ESCROW_ABI, signer);
+  const iface = new ethers.Interface(PAYMENT_ESCROW_ABI);
+  const signerAddr = await signer.getAddress();
+  const network = await provider.getNetwork();
+  const nativeBal = await provider.getBalance(signerAddr);
 
-  let tx: ethers.TransactionResponse;
-  if (action === 'deposit') {
-    tx = await contract.deposit({ value: amount });
-  } else {
-    tx = await contract.withdraw(amount);
-  }
+  console.log('[escrow] callEscrow', {
+    action,
+    to: CONTRACTS.PaymentEscrow,
+    amount: amount.toString(),
+    amountEther: ethers.formatEther(amount),
+    signer: signerAddr,
+    chainId: Number(network.chainId),
+    nativeBalance: ethers.formatEther(nativeBal),
+  });
+
+  // Build the raw tx (skip ethers' estimateGas pre-flight by passing gasLimit
+  // explicitly — that way MetaMask shows the popup even if simulation would fail)
+  const data = action === 'deposit'
+    ? iface.encodeFunctionData('deposit', [])
+    : iface.encodeFunctionData('withdraw', [amount]);
+
+  const txRequest = {
+    to: CONTRACTS.PaymentEscrow,
+    value: action === 'deposit' ? amount : 0n,
+    data,
+    gasLimit: 200_000n, // generous, avoids estimateGas roundtrip
+  };
+
+  console.log('[escrow] sending tx', {
+    to: txRequest.to,
+    value: txRequest.value.toString(),
+    valueEther: ethers.formatEther(txRequest.value),
+    data: txRequest.data,
+    gasLimit: txRequest.gasLimit.toString(),
+  });
+
+  const tx = await signer.sendTransaction(txRequest);
+  console.log('[escrow] tx submitted', tx.hash);
 
   const receipt = await tx.wait();
+  console.log('[escrow] tx confirmed', receipt?.hash);
   return receipt?.hash ?? tx.hash;
 }
 

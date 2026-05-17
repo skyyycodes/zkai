@@ -1266,15 +1266,8 @@ function ApiKeysSection({
       }
       const { nonce } = await chalRes.json();
 
-      let coin_public_key: string | null = null;
-      if (connectedAPI) {
-        try {
-          const shielded = await connectedAPI.getShieldedAddresses();
-          coin_public_key = (shielded as { shieldedCoinPublicKey?: string }).shieldedCoinPublicKey ?? null;
-        } catch {
-          /* ignore */
-        }
-      }
+      // EVM wallets don't have a shielded coin public key concept
+      const coin_public_key: string | null = null;
 
       const verRes = await fetch('/api/auth/verify', {
         method: 'POST',
@@ -1336,7 +1329,7 @@ function ApiKeysSection({
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.02] px-8 py-16 text-center">
           <Wallet className="mx-auto h-8 w-8 text-white/20" />
-          <p className="mt-3 text-sm text-white/40">Connect your Midnight wallet in the header to view and create API keys.</p>
+          <p className="mt-3 text-sm text-white/40">Connect your wallet in the header to view and create API keys.</p>
         </div>
       </div>
     );
@@ -1592,7 +1585,7 @@ function JobRow({ job, StatusIcon }: {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-xs text-white/40 tabular-nums">{jobTokens(job).toLocaleString()} tokens</span>
-          <span className="text-xs text-white/50 tabular-nums">{job.amount.toLocaleString()} tNIGHT</span>
+          <span className="text-xs text-white/50 tabular-nums">{job.amount.toLocaleString()} A0GI</span>
           <StatusBadge status={job.uiStatus} />
           <ChevronRight
             className={`h-3.5 w-3.5 text-white/25 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
@@ -1806,8 +1799,12 @@ function LogsSection({ walletAddress }: { walletAddress: string | null }) {
               </tr>
             ) : (
               logJobs.map(job => {
+                // A job that produced an attestation_hash succeeded, regardless of
+                // whether the provider returned metrics (encrypted-mode jobs skip metrics).
                 const code =
-                  job.duration_ms != null || (job.completion_tokens ?? 0) > 0 ? 200 : 502;
+                  job.attestation_hash || job.duration_ms != null || (job.completion_tokens ?? 0) > 0
+                    ? 200
+                    : 502;
                 return (
                   <tr key={job.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3.5">
@@ -1847,26 +1844,21 @@ function CreditsSection({
   const [jobs, setJobs] = useState<DashboardJob[]>([]);
   const [jobsLoading, setJobsLoading] = useState(false);
 
-  const fetchBalance = useCallback(async (api: ConnectedAPI) => {
+  const fetchBalance = useCallback(async (_api: ConnectedAPI) => {
+    if (!walletAddress) { setEscrowBalance(null); return; }
     setBalanceLoading(true);
     try {
-      const shielded = await api.getShieldedAddresses();
-      const cpk = (shielded as { shieldedCoinPublicKey?: string }).shieldedCoinPublicKey;
-      if (!cpk) {
-        setEscrowBalance(null);
-        return;
-      }
-      const res = await fetch(`/api/escrow/balance?coinPublicKey=${encodeURIComponent(cpk)}`);
+      const res = await fetch(`/api/escrow/balance?address=${encodeURIComponent(walletAddress)}`);
       if (res.ok) {
-        const { balance } = await res.json();
-        setEscrowBalance(typeof balance === 'string' ? balance : String(balance));
+        const { balance_a0gi } = await res.json();
+        setEscrowBalance(typeof balance_a0gi === 'string' ? balance_a0gi : String(balance_a0gi));
       }
     } catch {
       setEscrowBalance(null);
     } finally {
       setBalanceLoading(false);
     }
-  }, []);
+  }, [walletAddress]);
 
   useEffect(() => {
     if (connectedAPI) fetchBalance(connectedAPI);
@@ -1906,19 +1898,27 @@ function CreditsSection({
   async function handleDeposit() {
     if (!connectedAPI) {
       setDepositStatus('err');
-      setDepositMsg('Connect Lace and approve wallet access to deposit.');
+      setDepositMsg('Connect MetaMask and approve wallet access to deposit.');
       return;
     }
     const n = Number(depositAmount);
     if (!depositAmount.trim() || Number.isNaN(n) || n <= 0 || !Number.isFinite(n)) {
       setDepositStatus('err');
-      setDepositMsg('Enter a valid tNIGHT amount (positive number).');
+      setDepositMsg('Enter a valid A0GI amount (positive number).');
       return;
     }
     setDepositStatus('loading');
-    setDepositMsg('Approve in Lace wallet…');
+    setDepositMsg('Approve in MetaMask…');
     try {
-      await callEscrow(connectedAPI, 'deposit', BigInt(Math.floor(n)));
+      const { ethers } = await import('ethers');
+      const { switchTo0GGalileo } = await import('@/lib/wallet');
+      const network = await connectedAPI.getNetwork();
+      if (Number(network.chainId) !== 16602) {
+        setDepositMsg('Switching network to 0G Galileo…');
+        await switchTo0GGalileo(connectedAPI);
+      }
+      const wei = ethers.parseEther(depositAmount.trim());
+      await callEscrow(connectedAPI, 'deposit', wei);
       setDepositStatus('ok');
       setDepositMsg('Deposited. Refreshing balance…');
       setTimeout(() => fetchBalance(connectedAPI), 5000);
@@ -1928,14 +1928,20 @@ function CreditsSection({
     }
   }
 
-  const displayBalance =
-    escrowBalance !== null ? (balanceLoading ? '…' : escrowBalance) : walletAddress ? '—' : '0';
+  const displayBalance = (() => {
+    if (escrowBalance === null) return walletAddress ? '—' : '0';
+    if (balanceLoading) return '…';
+    const n = Number(escrowBalance);
+    if (!Number.isFinite(n)) return escrowBalance;
+    // Trim to 4 decimals max, strip trailing zeros, keep 0 visible as "0"
+    return n.toFixed(4).replace(/\.?0+$/, '') || '0';
+  })();
 
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold text-white">Credits</h1>
-        <p className="mt-1 text-sm text-white/40">Manage your tNIGHT escrow balance and spending.</p>
+        <p className="mt-1 text-sm text-white/40">Manage your A0GI escrow balance and spending.</p>
       </div>
 
       <div className="border border-violet-500/20 rounded-xl p-6 bg-violet-500/5">
@@ -1944,16 +1950,16 @@ function CreditsSection({
             <CreditCard className="w-5 h-5 text-violet-400" />
             <span className="font-semibold text-white">Escrow Balance</span>
           </div>
-          <span className="text-xs text-white/30">tNIGHT locked for inference</span>
+          <span className="text-xs text-white/30">A0GI locked for inference</span>
         </div>
         <div className="text-4xl font-bold text-white mb-1">
           {displayBalance}{' '}
-          <span className="text-lg font-normal text-white/40">tNIGHT</span>
+          <span className="text-lg font-normal text-white/40">A0GI</span>
         </div>
         <p className="text-xs text-white/30 mt-2">
           {walletAddress
-            ? 'Deposit tNIGHT into the escrow contract to pay for inference. Balance is read from chain when Lace is connected.'
-            : 'Connect your Midnight wallet to deposit tNIGHT and enable inference payments.'}
+            ? 'Deposit A0GI into the escrow contract to pay for inference. Balance is read from the 0G chain when MetaMask is connected.'
+            : 'Connect your wallet to deposit A0GI and enable inference payments.'}
         </p>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
@@ -1961,7 +1967,7 @@ function CreditsSection({
             min={1}
             step={1}
             inputMode="numeric"
-            placeholder="Amount (tNIGHT)"
+            placeholder="Amount (A0GI)"
             value={depositAmount}
             onChange={e => setDepositAmount(e.target.value)}
             disabled={!connectedAPI || depositStatus === 'loading'}
@@ -1974,7 +1980,7 @@ function CreditsSection({
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-500 disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
-            {depositStatus === 'loading' ? 'Depositing…' : 'Deposit tNIGHT'}
+            {depositStatus === 'loading' ? 'Depositing…' : 'Deposit A0GI'}
           </button>
         </div>
         {depositMsg && (
@@ -1990,7 +1996,7 @@ function CreditsSection({
           {[
             {
               label: 'Total Spent',
-              value: !walletAddress || jobsLoading ? '—' : `${totalSpent.toLocaleString()} tNIGHT`,
+              value: !walletAddress || jobsLoading ? '—' : `${totalSpent.toLocaleString()} A0GI`,
             },
             {
               label: 'Requests',
@@ -2002,8 +2008,8 @@ function CreditsSection({
                 !walletAddress || jobsLoading
                   ? '—'
                   : requestCount === 0
-                    ? '0 tNIGHT'
-                    : `${(avgPerCall).toLocaleString(undefined, { maximumFractionDigits: 6 })} tNIGHT`,
+                    ? '0 A0GI'
+                    : `${(avgPerCall).toLocaleString(undefined, { maximumFractionDigits: 6 })} A0GI`,
             },
           ].map(({ label, value }) => (
             <div key={label} className="bg-white/[0.03] border border-white/5 rounded-lg px-4 py-3">
@@ -2017,8 +2023,8 @@ function CreditsSection({
       <div className="border border-white/10 rounded-xl p-5 space-y-3">
         <h3 className="text-sm font-semibold text-white/70">How Escrow Works</h3>
         {[
-          { step: '1', text: 'Deposit tNIGHT once into the ZKai escrow contract.' },
-          { step: '2', text: 'Each inference request auto-deducts 100 tNIGHT from your balance.' },
+          { step: '1', text: 'Deposit A0GI once into the ZKai escrow contract on 0G.' },
+          { step: '2', text: 'Each inference request auto-deducts 100 A0GI from your balance.' },
           { step: '3', text: 'Unused funds can be withdrawn at any time.' },
         ].map(({ step, text }) => (
           <div key={step} className="flex items-start gap-3">
@@ -2142,7 +2148,7 @@ function DashboardPageContent() {
       <Navigation
         forceTransparent
         onWalletChange={setWalletAddress}
-        onApiChange={setConnectedAPI}
+        onProviderChange={setConnectedAPI}
       />
 
       <div className="relative z-10 min-h-screen pt-20">

@@ -20,7 +20,7 @@ const securityFeatures = [
     icon: Eye,
     title: "Verifiable Attestation",
     description:
-      "Every job includes attestations tied to model and runtime integrity, with hashes anchored on Midnight.",
+      "Every job includes attestations tied to model and runtime integrity, with hashes anchored on the 0G chain.",
   },
   {
     icon: FileCheck,

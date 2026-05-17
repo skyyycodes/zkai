@@ -52,13 +52,13 @@ console.log(response.choices[0].message.content);`,
     number: "III",
     title: "Verify attestation and settle escrow",
     description:
-      "Every run includes attestation checks and usage accounting. The proof hash is verified on Midnight and escrow finalizes payment after validation.",
+      "Every run includes attestation checks and usage accounting. The proof hash is verified on the 0G chain and escrow finalizes payment after validation.",
     accent: "#A5F3D0",
     file: "settlement.ts",
-    status: "Attested on Midnight",
+    status: "Attested on 0G",
     code: `const receipt = await client.verifyAndSettle({
   attestation: response.attestation,
-  maxCostDust: "0.25",
+  maxCostA0GI: "0.25",
 });
 
 console.log("job", receipt.jobId);

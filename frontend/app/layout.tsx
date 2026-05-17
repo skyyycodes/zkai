@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ZKai — Private AI Inference",
-  description: "Encrypted AI inference verified on Midnight blockchain",
+  description: "Encrypted AI inference verified on the 0G chain",
 };
 
 export default function RootLayout({

@@ -49,7 +49,7 @@ export function FooterSection() {
 
               <p className="mb-8 max-w-xs leading-relaxed text-white/50">
                 Private AI inference with encrypted prompts, attested execution, and settlement on
-                Midnight.
+                the 0G chain.
               </p>
 
               <div className="flex gap-6">

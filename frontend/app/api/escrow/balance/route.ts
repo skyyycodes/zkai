@@ -1,31 +1,28 @@
 import { NextResponse } from 'next/server';
-import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
-import { encodeCoinPublicKey } from '@midnight-ntwrk/ledger-v8';
-import { ledger } from '@/lib/compiled/PaymentEscrow/contract';
+import { ethers } from 'ethers';
 
-const INDEXER_HTTP = 'https://indexer.preprod.midnight.network/api/v3/graphql';
-const INDEXER_WS = 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws';
+const RPC_URL = process.env.OG_RPC_URL ?? 'https://evmrpc-testnet.0g.ai';
 const ESCROW_ADDRESS = process.env.NEXT_PUBLIC_ESCROW_CONTRACT!;
+
+const ABI = [
+  'function balance(address) view returns (uint256)',
+];
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const coinPublicKey = searchParams.get('coinPublicKey');
-  if (!coinPublicKey) {
-    return NextResponse.json({ error: 'coinPublicKey required' }, { status: 400 });
+  const address = searchParams.get('address');
+  if (!address || !ethers.isAddress(address)) {
+    return NextResponse.json({ error: 'valid EVM address required' }, { status: 400 });
   }
 
   try {
-    const publicDataProvider = indexerPublicDataProvider(INDEXER_HTTP, INDEXER_WS);
-    const contractState = await publicDataProvider.queryContractState(ESCROW_ADDRESS as any);
-    if (!contractState) {
-      return NextResponse.json({ balance: '0' });
-    }
-
-    const state = ledger(contractState.data);
-    const keyBytes = encodeCoinPublicKey(coinPublicKey);
-    const balance = state.balance.member(keyBytes) ? state.balance.lookup(keyBytes) : 0n;
-
-    return NextResponse.json({ balance: balance.toString() });
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const contract = new ethers.Contract(ESCROW_ADDRESS, ABI, provider);
+    const bal = await contract.balance(address);
+    return NextResponse.json({
+      balance_wei: bal.toString(),
+      balance_a0gi: ethers.formatEther(bal),
+    });
   } catch (e: any) {
     console.error('[escrow/balance] error:', e?.message ?? e);
     return NextResponse.json({ error: e?.message ?? 'Failed to fetch balance' }, { status: 500 });

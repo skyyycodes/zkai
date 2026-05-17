@@ -2,56 +2,56 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Check, Copy, LogOut, Menu, Wallet, X } from "lucide-react";
+import type { ethers } from "ethers";
 
 import { Button } from "@/components/ui/button";
 import {
   clearWalletSession,
   connectWallet,
   hasPersistedWalletSession,
+  isMetaMaskAvailable,
   persistWalletSession,
   refreshWalletState,
-  waitForExtension,
-  type ConnectedAPI,
-  type MidnightWalletState,
+  switchTo0GGalileo,
+  type WalletState,
 } from "@/lib/wallet";
 
 type NavWalletCallbacks = {
   onWalletChange?: (address: string | null) => void;
-  onApiChange?: (api: ConnectedAPI | null) => void;
+  onProviderChange?: (provider: ethers.BrowserProvider | null) => void;
 };
 
 const navLinks = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "Models", href: "/model" },
   { name: "Ranking", href: "/provider_dashboard" },
-  { name: "Docs", href: "https://github.com/Eshan276/zkai" },
+  { name: "Docs", href: "https://github.com/Eshan276/zkai0g" },
 ] as const;
 
 function NavWalletButton({
   isScrolled,
   onClose,
   onWalletChange,
-  onApiChange,
+  onProviderChange,
 }: {
   isScrolled: boolean;
   onClose?: () => void;
 } & NavWalletCallbacks) {
-  const [walletState, setWalletState] = useState<MidnightWalletState | null>(null);
+  const [walletState, setWalletState] = useState<WalletState | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [hasExtension, setHasExtension] = useState<boolean | null>(null);
-  const apiRef = useRef<Awaited<ReturnType<typeof connectWallet>>["api"] | null>(null);
+  const providerRef = useRef<ethers.BrowserProvider | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoReconnectAttempted = useRef(false);
-  const walletCallbacksRef = useRef({ onWalletChange, onApiChange });
-  walletCallbacksRef.current = { onWalletChange, onApiChange };
+  const callbacksRef = useRef({ onWalletChange, onProviderChange });
+  callbacksRef.current = { onWalletChange, onProviderChange };
 
   useEffect(() => {
-    waitForExtension(3000).then((ext) => setHasExtension(!!ext));
+    setHasExtension(isMetaMaskAvailable());
   }, []);
 
-  // Restore session after navigation or reload when user previously connected
   useEffect(() => {
     if (hasExtension !== true || walletState) return;
     if (!hasPersistedWalletSession()) return;
@@ -63,14 +63,14 @@ function NavWalletButton({
       setConnecting(true);
       setError("");
       try {
-        const { api, state } = await connectWallet();
+        const { provider, state } = await connectWallet();
         if (cancelled) return;
-        apiRef.current = api;
+        providerRef.current = provider;
         setWalletState(state);
         persistWalletSession();
-        const { onWalletChange: ow, onApiChange: oa } = walletCallbacksRef.current;
+        const { onWalletChange: ow, onProviderChange: op } = callbacksRef.current;
         ow?.(state.address);
-        oa?.(api as unknown as ConnectedAPI);
+        op?.(provider);
       } catch (e: unknown) {
         if (!cancelled) {
           clearWalletSession();
@@ -88,10 +88,10 @@ function NavWalletButton({
   }, [hasExtension, walletState]);
 
   useEffect(() => {
-    if (!walletState || !apiRef.current) return;
+    if (!walletState || !providerRef.current) return;
     pollRef.current = setInterval(async () => {
       try {
-        const fresh = await refreshWalletState(apiRef.current!);
+        const fresh = await refreshWalletState(providerRef.current!);
         setWalletState(fresh);
       } catch {}
     }, 15_000);
@@ -104,12 +104,16 @@ function NavWalletButton({
     setConnecting(true);
     setError("");
     try {
-      const { api, state } = await connectWallet();
-      apiRef.current = api;
+      const { provider, state } = await connectWallet();
+      providerRef.current = provider;
+      // Try to switch to 0G Galileo if not already on it
+      if (state.chainId !== 16661) {
+        try { await switchTo0GGalileo(provider); } catch {}
+      }
       setWalletState(state);
       persistWalletSession();
       onWalletChange?.(state.address);
-      onApiChange?.(api as unknown as ConnectedAPI);
+      onProviderChange?.(provider);
       onClose?.();
     } catch (e: any) {
       setError(e.message);
@@ -120,11 +124,11 @@ function NavWalletButton({
 
   function disconnect() {
     if (pollRef.current) clearInterval(pollRef.current);
-    apiRef.current = null;
+    providerRef.current = null;
     clearWalletSession();
     setWalletState(null);
     onWalletChange?.(null);
-    onApiChange?.(null);
+    onProviderChange?.(null);
   }
 
   function copyAddress() {
@@ -135,7 +139,7 @@ function NavWalletButton({
   }
 
   if (walletState) {
-    const short = `${walletState.address.slice(0, 8)}…${walletState.address.slice(-4)}`;
+    const short = `${walletState.address.slice(0, 6)}…${walletState.address.slice(-4)}`;
     return (
       <div className="flex items-center gap-2">
         <button
@@ -162,7 +166,7 @@ function NavWalletButton({
   if (hasExtension === false) {
     return (
       <a
-        href="https://chrome.google.com/webstore/search/midnight%20lace"
+        href="https://metamask.io/download/"
         target="_blank"
         rel="noopener noreferrer"
         className={`flex items-center gap-2 rounded-full border border-yellow-500/30 bg-yellow-500/10 font-semibold text-yellow-300 transition-all duration-500 hover:bg-yellow-500/20 ${
@@ -170,7 +174,7 @@ function NavWalletButton({
         }`}
       >
         <AlertTriangle className="h-4 w-4" />
-        Install Lace
+        Install MetaMask
       </a>
     );
   }
@@ -195,7 +199,7 @@ function NavWalletButton({
 export function Navigation({
   forceTransparent = false,
   onWalletChange,
-  onApiChange,
+  onProviderChange,
 }: { forceTransparent?: boolean } & NavWalletCallbacks) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -204,26 +208,19 @@ export function Navigation({
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
     document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [isMobileMenuOpen]);
 
   const useGlassNav = !forceTransparent && (isScrolled || isMobileMenuOpen);
 
   return (
-    <header
-      className={`fixed left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled ? "top-4" : "top-0"
-      }`}
-    >
+    <header className={`fixed left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? "top-4" : "top-0"}`}>
       <nav
         className={`mx-auto transition-all duration-500 ${
           useGlassNav
@@ -231,24 +228,12 @@ export function Navigation({
             : "max-w-[1400px] bg-transparent"
         }`}
       >
-        <div
-          className={`flex items-center justify-between px-6 transition-all duration-500 lg:px-8 ${
-            isScrolled ? "h-14" : "h-20"
-          }`}
-        >
+        <div className={`flex items-center justify-between px-6 transition-all duration-500 lg:px-8 ${isScrolled ? "h-14" : "h-20"}`}>
           <a href="#" className="flex items-center gap-2">
-            <span
-              className={`font-bold tracking-tight text-white transition-all duration-500 ${
-                isScrolled ? "text-xl" : "text-2xl"
-              }`}
-            >
+            <span className={`font-bold tracking-tight text-white transition-all duration-500 ${isScrolled ? "text-xl" : "text-2xl"}`}>
               ZKai
             </span>
-            <span
-              className={`font-mono text-white/45 transition-all duration-500 ${
-                isScrolled ? "mt-0.5 text-[10px]" : "mt-1 text-xs"
-              }`}
-            >
+            <span className={`font-mono text-white/45 transition-all duration-500 ${isScrolled ? "mt-0.5 text-[10px]" : "mt-1 text-xs"}`}>
               TM
             </span>
           </a>
@@ -272,7 +257,7 @@ export function Navigation({
             <NavWalletButton
               isScrolled={isScrolled}
               onWalletChange={onWalletChange}
-              onApiChange={onApiChange}
+              onProviderChange={onProviderChange}
             />
           </div>
 
@@ -321,7 +306,7 @@ export function Navigation({
                 isScrolled={false}
                 onClose={() => setIsMobileMenuOpen(false)}
                 onWalletChange={onWalletChange}
-                onApiChange={onApiChange}
+                onProviderChange={onProviderChange}
               />
             </div>
           </div>

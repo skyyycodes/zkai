@@ -11,7 +11,7 @@ type Integration = {
 const integrations: Integration[] = [
   { name: "OpenAI SDK", category: "Client API", accent: "#FF9E8D" },
   { name: "LangChain", category: "Orchestration", accent: "#B39DDB" },
-  { name: "Midnight", category: "Settlement Layer", accent: "#A5F3D0" },
+  { name: "0G Chain", category: "Settlement Layer", accent: "#A5F3D0" },
   { name: "Gramine", category: "TEE Runtime", accent: "#FFF9C4" },
   { name: "Docker", category: "Provider Runtime", accent: "#FFCC80" },
   { name: "llama.cpp", category: "Inference Engine", accent: "#4DD0E1" },
@@ -118,7 +118,7 @@ export default function IntegrationsSection() {
             Plugs into your existing AI stack.
           </h2>
           <p className="text-lg leading-relaxed text-white/55 lg:text-xl">
-            OpenAI-compatible clients, TEE runtimes, model routing, and Midnight settlement in one
+            OpenAI-compatible clients, TEE runtimes, model routing, and 0G chain settlement in one
             pipeline.
           </p>
         </motion.div>

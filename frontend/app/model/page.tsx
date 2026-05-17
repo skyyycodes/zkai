@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 
 export const metadata = {
   title: "Models - ZKai",
-  description: "Explore models optimized for private, verifiable inference on ZKai and Midnight.",
+  description: "Explore models optimized for private, verifiable inference on ZKai and the 0G chain.",
 };
 
 export default function ModelsPage() {

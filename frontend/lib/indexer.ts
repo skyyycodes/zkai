@@ -1,4 +1,4 @@
-const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || 'https://indexer.preprod.midnight.network/api/v3/graphql';
+const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || '';
 
 export interface Provider {
   id: string;

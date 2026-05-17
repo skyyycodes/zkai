@@ -53,7 +53,7 @@ const cards = [
   },
   {
     title: "On-Chain Attestation",
-    desc: "Every inference is attested on Midnight blockchain — cryptographic proof your AI ran correctly.",
+    desc: "Every inference is attested on the 0G chain — cryptographic proof your AI ran correctly.",
     gradientFrom: "#A5F3D0",
     gradientTo: "#4DD0E1",
   },

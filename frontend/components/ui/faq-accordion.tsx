@@ -35,7 +35,7 @@ const faqViewport = {
 const faqs = [
   {
     q: "What is ZKai and how does private AI inference work?",
-    a: "ZKai uses zero-knowledge proofs to verify that AI inference was executed correctly without ever exposing your prompts or responses to the provider. Your inputs are encrypted locally and the ZK proof is verified on the Midnight blockchain.",
+    a: "ZKai uses zero-knowledge proofs to verify that AI inference was executed correctly without ever exposing your prompts or responses to the provider. Your inputs are encrypted locally and the ZK proof is verified on the 0G chain.",
   },
   {
     q: "Is ZKai compatible with the OpenAI API?",
@@ -51,7 +51,7 @@ const faqs = [
   },
   {
     q: "How does on-chain attestation protect me?",
-    a: "Every inference request generates a cryptographic attestation stored on the Midnight blockchain. This gives you verifiable proof that the model ran correctly and that your data wasn't tampered with — without revealing the contents of your query.",
+    a: "Every inference request generates a cryptographic attestation stored on the 0G chain. This gives you verifiable proof that the model ran correctly and that your data wasn't tampered with — without revealing the contents of your query.",
   },
 ];
 

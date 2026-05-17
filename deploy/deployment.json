@@ -1,6 +1,7 @@
 {
-  "network": "0g-galileo",
-  "deployedAt": "2026-04-18T05:22:08.585Z",
+  "network": "0g-mainnet",
+  "chainId": 16661,
+  "deployedAt": "2026-05-16T14:48:43.046Z",
   "contracts": {
     "ProviderRegistry": "0x6D400F5D1DcCaA3e98E3dE17322aA23DE38bAC99",
     "PaymentEscrow": "0xb2C7c0F7a4C2877319E8Ed1Fae0bf3C705b6Fc4C",

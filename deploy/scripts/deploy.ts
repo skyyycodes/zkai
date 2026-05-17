@@ -24,8 +24,16 @@ async function main() {
   const attestationAddr = await attestation.getAddress();
   console.log('AttestationRegistry:', attestationAddr);
 
+  const network = await ethers.provider.getNetwork();
+  const networkLabel = network.chainId === 16661n
+    ? '0g-mainnet'
+    : network.chainId === 16602n
+      ? '0g-galileo'
+      : `chain-${network.chainId}`;
+
   const deployment = {
-    network: '0g-galileo',
+    network: networkLabel,
+    chainId: Number(network.chainId),
     deployedAt: new Date().toISOString(),
     contracts: {
       ProviderRegistry: registryAddr,

@@ -1,2 +1,0 @@
-[console_scripts]
-zkai-provider = zkai.provider_cli:main

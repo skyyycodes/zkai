@@ -15,6 +15,11 @@ const config: HardhatUserConfig = {
       chainId: 16602,
       accounts: [PRIVATE_KEY],
     },
+    mainnet: {
+      url: process.env.OG_MAINNET_RPC_URL ?? 'https://evmrpc.0g.ai',
+      chainId: 16661,
+      accounts: [PRIVATE_KEY],
+    },
     localhost: {
       url: 'http://127.0.0.1:8545',
     },
